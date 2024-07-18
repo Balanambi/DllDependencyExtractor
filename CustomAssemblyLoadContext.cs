@@ -31,9 +31,9 @@ namespace DllDependencyExtractor
             }
             catch (FileNotFoundException)
             {
-                // If not found, we might need to handle special cases or additional paths
-                string additionalPath = Path.Combine(AppContext.BaseDirectory, $"{assemblyName.Name}.dll");
-                if (File.Exists(additionalPath))
+                // Try to find the assembly in all subdirectories of the base directory
+                string foundPath = FindAssemblyInBaseDirectory(AppContext.BaseDirectory, assemblyName.Name);
+                if (foundPath != null)
                 {
                     return LoadFromAssemblyPath(additionalPath);
                 }
@@ -66,6 +66,14 @@ namespace DllDependencyExtractor
             }
 
             return assembly;
+        }
+        private string FindAssemblyInBaseDirectory(string baseDirectory, string assemblyName)
+        {
+            foreach (var file in Directory.GetFiles(baseDirectory, $"{assemblyName}.dll", SearchOption.AllDirectories))
+            {
+                return file;
+            }
+            return null;
         }
     }
 }
