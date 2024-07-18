@@ -21,7 +21,7 @@ namespace DllDependencyExtractor
             {
                 return LoadFromAssemblyPath(assemblyPath);
             }
-            return null;
+           return Default.LoadFromAssemblyName(assemblyName);
         }
     }
 }
