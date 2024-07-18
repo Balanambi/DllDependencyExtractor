@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using System.Runtime.Loader;
 
 namespace DllDependencyExtractor
 {
@@ -18,16 +17,32 @@ namespace DllDependencyExtractor
             foreach (string dllPath in Directory.GetFiles(folderPath, "*.dll"))
             {
                 Logger.Info($"Processing DLL: {dllPath}");
-                var assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(dllPath);
-
-                foreach (var type in assembly.GetTypes())
+                try
                 {
-                    if (!namespaceClasses.ContainsKey(type.Namespace))
-                    {
-                        namespaceClasses[type.Namespace] = new List<string>();
-                    }
+                    var context = new CustomAssemblyLoadContext(folderPath);
+                    var assembly = context.LoadFromAssemblyPath(dllPath);
 
-                    ((List<string>)namespaceClasses[type.Namespace]).Add(type.Name);
+                    foreach (var type in assembly.GetTypes())
+                    {
+                        if (!namespaceClasses.ContainsKey(type.Namespace))
+                        {
+                            namespaceClasses[type.Namespace] = new List<string>();
+                        }
+
+                        ((List<string>)namespaceClasses[type.Namespace]).Add(type.Name);
+                    }
+                }
+                catch (ReflectionTypeLoadException ex)
+                {
+                    Logger.Error($"Unable to load one or more of the requested types from {dllPath}.", ex);
+                    foreach (var loaderException in ex.LoaderExceptions)
+                    {
+                        Logger.Error(loaderException.Message, loaderException);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error($"An error occurred while processing {dllPath}.", ex);
                 }
             }
 
@@ -44,16 +59,24 @@ namespace DllDependencyExtractor
             foreach (string dllPath in Directory.GetFiles(folderPath, "*.dll"))
             {
                 Logger.Info($"Processing DLL: {dllPath}");
-                var assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(dllPath);
-
-                // Get the dependent DLLs
-                List<string> dependencies = new List<string>();
-                foreach (var referencedAssembly in assembly.GetReferencedAssemblies())
+                try
                 {
-                    dependencies.Add(referencedAssembly.FullName);
-                }
+                    var context = new CustomAssemblyLoadContext(folderPath);
+                    var assembly = context.LoadFromAssemblyPath(dllPath);
 
-                dllDependencies[Path.GetFileName(dllPath)] = dependencies;
+                    // Get the dependent DLLs
+                    List<string> dependencies = new List<string>();
+                    foreach (var referencedAssembly in assembly.GetReferencedAssemblies())
+                    {
+                        dependencies.Add(referencedAssembly.FullName);
+                    }
+
+                    dllDependencies[Path.GetFileName(dllPath)] = dependencies;
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error($"An error occurred while processing {dllPath}.", ex);
+                }
             }
 
             Logger.Info("Completed scanning DLL dependencies.");
