@@ -35,7 +35,7 @@ namespace DllDependencyExtractor
                 string foundPath = FindAssemblyInBaseDirectory(AppContext.BaseDirectory, assemblyName.Name);
                 if (foundPath != null)
                 {
-                    return LoadFromAssemblyPath(additionalPath);
+                    return LoadFromAssemblyPath(foundPath);
                 }
 
                 // Log that the assembly was not found
