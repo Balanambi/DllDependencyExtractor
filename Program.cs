@@ -18,10 +18,13 @@ namespace DllDependencyExtractor
 
             string folderPath = @"C:\Path\To\Your\Dlls"; // Change this to your folder path
 
+            Logger.Info("Starting analysis of DLLs.");
+
             var namespaceClasses = dllAnalyzer.GetNamespacesAndClasses(folderPath);
             var dllDependencies = dllAnalyzer.GetDllDependencies(folderPath);
 
             // Display the namespaces and classes
+            Logger.Info("Displaying namespaces and classes.");
             foreach (DictionaryEntry entry in namespaceClasses)
             {
                 Console.WriteLine($"Namespace: {entry.Key}");
@@ -32,6 +35,7 @@ namespace DllDependencyExtractor
             }
 
             // Display the DLL dependencies
+            Logger.Info("Displaying DLL dependencies.");
             Console.WriteLine("\nDLL Dependencies:");
             foreach (var entry in dllDependencies)
             {
@@ -41,6 +45,8 @@ namespace DllDependencyExtractor
                     Console.WriteLine($"\tDependency: {dependency}");
                 }
             }
+
+            Logger.Info("Completed analysis of DLLs.");
         }
     }
 }
