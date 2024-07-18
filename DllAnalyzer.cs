@@ -13,8 +13,11 @@ namespace DllDependencyExtractor
         {
             Hashtable namespaceClasses = new Hashtable();
 
+            Logger.Info($"Scanning DLLs in folder: {folderPath}");
+
             foreach (string dllPath in Directory.GetFiles(folderPath, "*.dll"))
             {
+                Logger.Info($"Processing DLL: {dllPath}");
                 var assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(dllPath);
 
                 foreach (var type in assembly.GetTypes())
@@ -28,6 +31,7 @@ namespace DllDependencyExtractor
                 }
             }
 
+            Logger.Info("Completed scanning namespaces and classes.");
             return namespaceClasses;
         }
 
@@ -35,8 +39,11 @@ namespace DllDependencyExtractor
         {
             Dictionary<string, List<string>> dllDependencies = new Dictionary<string, List<string>>();
 
+            Logger.Info($"Scanning DLL dependencies in folder: {folderPath}");
+
             foreach (string dllPath in Directory.GetFiles(folderPath, "*.dll"))
             {
+                Logger.Info($"Processing DLL: {dllPath}");
                 var assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(dllPath);
 
                 // Get the dependent DLLs
@@ -49,6 +56,7 @@ namespace DllDependencyExtractor
                 dllDependencies[Path.GetFileName(dllPath)] = dependencies;
             }
 
+            Logger.Info("Completed scanning DLL dependencies.");
             return dllDependencies;
         }
     }
