@@ -19,8 +19,12 @@ namespace DllDependencyExtractor
                 Logger.Info($"Processing DLL: {dllPath}");
                 try
                 {
-                    var context = new CustomAssemblyLoadContext(folderPath);
-                    var assembly = context.LoadFromAssemblyPath(dllPath);
+                    //var context = new CustomAssemblyLoadContext(folderPath);
+                    //var assembly = context.LoadFromAssemblyPath(dllPath);
+                    
+                    // Load assembly in reflection-only context
+                    var assembly = Assembly.ReflectionOnlyLoadFrom(dllPath);
+                    LoadReferencedAssembliesRecursively(assembly);
 
                     foreach (var type in assembly.GetTypes())
                     {
@@ -81,6 +85,26 @@ namespace DllDependencyExtractor
 
             Logger.Info("Completed scanning DLL dependencies.");
             return dllDependencies;
+        }
+        private void LoadReferencedAssembliesRecursively(Assembly assembly)
+        {
+            foreach (var referencedAssemblyName in assembly.GetReferencedAssemblies())
+            {
+                try
+                {
+                    var loadedAssembly = Assembly.ReflectionOnlyLoad(referencedAssemblyName.FullName);
+                    LoadReferencedAssembliesRecursively(loadedAssembly);
+                }
+                catch (FileNotFoundException)
+                {
+                    // Log the missing assembly
+                    Logger.Error($"Referenced assembly '{referencedAssemblyName.FullName}' could not be found.");
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error($"An error occurred while loading referenced assembly '{referencedAssemblyName.FullName}'.", ex);
+                }
+            }
         }
     }
 }
