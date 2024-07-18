@@ -31,6 +31,13 @@ namespace DllDependencyExtractor
             }
             catch (FileNotFoundException)
             {
+                // If not found, we might need to handle special cases or additional paths
+                string additionalPath = Path.Combine(AppContext.BaseDirectory, $"{assemblyName.Name}.dll");
+                if (File.Exists(additionalPath))
+                {
+                    return LoadFromAssemblyPath(additionalPath);
+                }
+
                 // Log that the assembly was not found
                 Logger.Error($"Assembly '{assemblyName.Name}' could not be found.");
                 return null;
