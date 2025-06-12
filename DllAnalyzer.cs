@@ -106,5 +106,30 @@ namespace DllDependencyExtractor
                 }
             }
         }
+
+        public void GeneratePostBuildScript(List<string> unusedDependencies)
+        {
+            var scriptPath = Path.Combine(Path.GetDirectoryName(_projectPath)!, "remove-unused-deps.bat");
+            var scriptContent = new List<string>
+            {
+                "@echo off",
+                "echo Removing unused dependencies from bin folder...",
+                ""
+            };
+
+            foreach (var dependency in unusedDependencies)
+            {
+                scriptContent.Add($"echo Removing {dependency} related files...");
+                scriptContent.Add($"del /Q \"$(OutDir){dependency}*.dll\" 2>nul");
+                scriptContent.Add($"del /Q \"$(OutDir){dependency}*.pdb\" 2>nul");
+                scriptContent.Add($"del /Q \"$(OutDir){dependency}*.xml\" 2>nul");
+                scriptContent.Add("");
+            }
+
+            scriptContent.Add("echo Cleanup completed!");
+
+            File.WriteAllLines(scriptPath, scriptContent);
+            Console.WriteLine($"Post-build script generated: {scriptPath}");
+        }
     }
 }
